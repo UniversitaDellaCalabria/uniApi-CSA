@@ -8,13 +8,19 @@ CSA_API_CREDENTIALS = {
   "password": "thatpassword"
 }
 
-CSA_API_BASE_URL = "https://preprod.csa-ws.cineca.it/unicalPreprod"
+CSA_API_URL = "https://prod.csa-ws.cineca.it/unicalProd"
+CSA_API_TEST_URL = "https://preprod.csa-ws.cineca.it/unicalPreprod"
+
+CSA_API_BASE_URL = CSA_API_TEST_URL
 CSA_API_AUTH_URL = "{}{}".format(CSA_API_BASE_URL, '/authentication')
 CSA_API_PASSWORD_REFRESH = "{}{}".format(CSA_API_BASE_URL,
                                          "/user/{username}/refreshPassword".format(**CSA_API_CREDENTIALS))
 
 CSA_API_SGE_AFFORG = "{}{}".format(CSA_API_BASE_URL, '/sge/afferenzaOrganizzativa')
 CSA_API_SGE_ESP = "{}{}".format(CSA_API_BASE_URL, '/sge/esposizioneSgePeriodo')
+CSA_API_RAP = "{}{}".format(CSA_API_BASE_URL, '/rapporti')
+CSA_API_VPER = "{}{}".format(CSA_API_BASE_URL, '/vociPersonali')
+CSA_API_VVAR = "{}{}".format(CSA_API_BASE_URL, '/vociVariabili')
 
 
 class CsaConnect(object):
@@ -62,7 +68,7 @@ class CsaConnect(object):
                              )
         req = requests.get(url,
                            headers = self._get_headers())
-        return json.loads(req.content.decode())
+        return req.json()
 
 
     def sge_esp(self, matricola,
@@ -75,8 +81,36 @@ class CsaConnect(object):
                                          dataRiferimento = dataRiferimento))
         url = '{}?{}'.format(CSA_API_SGE_ESP, qs)
         req = requests.get(url, headers = self._get_headers())
-        return json.loads(req.content.decode())
+        return req.json()
 
+    def rapporti(self, dataInizio='01-01-1900',
+                       dataFine='01-01-2100'):
+        """elenco di risorse con rapporto in essere nell' intervallo
+        """
+        d = dict(dataInizio = dataInizio, dataFine = dataFine)
+        req = requests.get(CSA_API_RAP, params = d, headers = self._get_headers())
+        return req.json()
+
+
+    # TODO - Utente non autorizzato alla risorsa vociPersonaliGetAll
+    def voci_personali(self, matricola, codice_esterno):
+        """Restituisce una lista di voci personali corrispondenti
+           ai parametri di ricerca. Occorre valorizzare almeno uno dei
+           seguenti campi: idInterno, codEsterno, codFiscale, matricola
+        """
+        d = dict(matricola = matricola, codEsterno = codice_esterno)
+        req = requests.get(CSA_API_VPER, params = d, headers = self._get_headers())
+        return req.json()
+
+    # TODO - Utente non autorizzato alla risorsa vociPersonaliGetAll
+    def voci_variabili(self, matricola, codice_esterno):
+        """Restituisce una lista di voci personali corrispondenti
+           ai parametri di ricerca. Occorre valorizzare almeno uno dei
+           seguenti campi: idInterno, codEsterno, codFiscale, matricola
+        """
+        d = dict(matricola = matricola, codEsterno = codice_esterno)
+        req = requests.get(CSA_API_VVAR, params = d, headers = self._get_headers())
+        return req.json()
 
 
 if __name__ == '__main__':
