@@ -58,8 +58,7 @@ class CsaConnect(object):
 
     def attivo(self, matricola):
         _strpformat = '%Y-%m-%dT%H:%M:%S.000Z'
-        rapporti = self.sge_afforg_matricola(matricola='17403').get('list', [{}])
-        '2222-02-02T00:00:00.000Z'
+        rapporti = self.sge_afforg_matricola(matricola=matricola).get('list', [{}])
         last_dt = datetime.strptime(rapporti[-1]['dataFine'], _strpformat)
         rapporto = {}
         for rap in rapporti:
