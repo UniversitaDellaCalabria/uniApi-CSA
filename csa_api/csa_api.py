@@ -56,6 +56,19 @@ class CsaConnect(object):
         self.tenant = self.user['tenant']
         return self.user['verified']
 
+    def attivo(self, matricola):
+        _strpformat = '%Y-%m-%dT%H:%M:%S.000Z'
+        rapporti = self.sge_afforg_matricola(matricola='17403').get('list', [{}])
+        '2222-02-02T00:00:00.000Z'
+        last_dt = datetime.strptime(rapporti[-1]['dataFine'], _strpformat)
+        rapporto = {}
+        for rap in rapporti:
+            dt = datetime.strptime(rap['dataFine'], _strpformat)
+            if dt >= last_dt:
+                last_dt = dt
+                rapporto = rap
+        if datetime.now() < last_dt:
+            return rapporto
 
     def sge_afforg_matricola(self,
                              matricola,
