@@ -8,7 +8,7 @@ CSA_API_CREDENTIALS = {
   "password": "thatpassword"
 }
 
-CSA_API_URL = "https://prod.csa-ws.cineca.it/unicalProd"
+CSA_API_URL = "https://prod.csa-ws.cineca.it/unical"
 CSA_API_TEST_URL = "https://preprod.csa-ws.cineca.it/unicalPreprod"
 
 CSA_API_BASE_URL = CSA_API_TEST_URL
@@ -35,6 +35,12 @@ class CsaConnect(object):
         self.base_url = base_url
         self.tenant = base_url.rpartition('/')[-1]
         self.user = dict()
+
+    def reset_password(self, password_old, password):
+        req = requests.put(CSA_API_PASSWORD_REFRESH,
+                           data = {'password_old': password_old,
+                                   'password': password})
+        return self.auth()
 
     @staticmethod
     def _fill_matricola(matricola):
