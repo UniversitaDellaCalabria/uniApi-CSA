@@ -28,26 +28,29 @@ class CsaConnect(object):
                        username=None,
                        password=None, token=None):
         self.username, self.password = username, password
-
         # if... handle token only without credentials
         self.token = token
-
         self.base_url = base_url
         self.tenant = base_url.rpartition('/')[-1]
         self.user = dict()
+
 
     def reset_password(self, password_old, password):
         req = requests.put(CSA_API_PASSWORD_REFRESH,
                            data = {'password_old': password_old,
                                    'password': password})
-        return self.auth()
+        self.password = password
+        return req
+
 
     @staticmethod
     def _fill_matricola(matricola):
         return str(matricola).zfill(6)
 
+
     def _get_headers(self):
         return {'Authorization': 'bearer {}'.format(self.token)}
+
 
     def auth(self):
         req = requests.post(CSA_API_AUTH_URL,
@@ -62,9 +65,11 @@ class CsaConnect(object):
         self.tenant = self.user['tenant']
         return self.user['verified']
 
+
     def attivo(self, matricola):
         _strpformat = '%Y-%m-%dT%H:%M:%S.000Z'
         rapporti = self.sge_afforg_matricola(matricola=matricola).get('list', [{}])
+        if not rapporti: return False
         last_dt = datetime.strptime(rapporti[-1]['dataFine'], _strpformat)
         rapporto = {}
         for rap in rapporti:
@@ -75,17 +80,16 @@ class CsaConnect(object):
         if datetime.now() < last_dt:
             return rapporto
 
+
     def sge_afforg_matricola(self,
                              matricola,
                              dataInizio='01-01-1900',
                              dataFine='01-01-2100'):
         url = '{}/{}?{}'.format(CSA_API_SGE_AFFORG,
-                             self._fill_matricola(matricola),
-                             urllib.parse.urlencode(dict(dataInizio = dataInizio,
-                                                         dataFine = dataFine))
-                             )
-        req = requests.get(url,
-                           headers = self._get_headers())
+                                self._fill_matricola(matricola),
+                                urllib.parse.urlencode(dict(dataInizio = dataInizio,
+                                                            dataFine = dataFine)))
+        req = requests.get(url, headers = self._get_headers())
         return req.json()
 
 
@@ -106,7 +110,8 @@ class CsaConnect(object):
         """elenco di risorse con rapporto in essere nell' intervallo
         """
         d = dict(dataInizio = dataInizio, dataFine = dataFine)
-        req = requests.get(CSA_API_RAP, params = d, headers = self._get_headers())
+        req = requests.get(CSA_API_RAP,
+                           params = d, headers = self._get_headers())
         return req.json()
 
 
@@ -119,6 +124,7 @@ class CsaConnect(object):
         d = dict(matricola = matricola, codEsterno = codice_esterno)
         req = requests.get(CSA_API_VPER, params = d, headers = self._get_headers())
         return req.json()
+
 
     # TODO - Utente non autorizzato alla risorsa vociPersonaliGetAll
     def voci_variabili(self, matricola, codice_esterno):
@@ -133,4 +139,4 @@ class CsaConnect(object):
 
 if __name__ == '__main__':
     csaconn = CsaConnect(CSA_API_BASE_URL,
-                         **CSA_API_CREDENTIALS )
+                         **CSA_API_CREDENTIALS)
